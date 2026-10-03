@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Storekeeper – Arabic Future Company</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f5f7;--card:#fff;--tx:#1a1d23;--mu:#667085;--bd:#e1e4ea;--ac:#1d4ed8;--ok:#15803d;--bad:#c2410c;--okb:#dcfce7;--badb:#ffedd5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111317;--card:#1b1e25;--tx:#eceff4;--mu:#9aa3b2;--bd:#2c313b;--ac:#6b9bff;--ok:#4ade80;--bad:#fb923c;--okb:#12301d;--badb:#3a2210}}
+:root[data-theme="dark"]{--bg:#111317;--card:#1b1e25;--tx:#eceff4;--mu:#9aa3b2;--bd:#2c313b;--ac:#6b9bff;--ok:#4ade80;--bad:#fb923c;--okb:#12301d;--badb:#3a2210}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:40px}
+.wrap{max-width:640px;margin:0 auto;padding:0 12px}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:12px 0 8px;z-index:5}
+h1{font-size:18px;margin:0 0 2px}
+.sub{color:var(--mu);font-size:13px;margin-bottom:8px}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tabs button{flex:1;padding:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;font-size:15px;font-weight:600}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .2s}
+.stat{display:flex;justify-content:space-between;font-size:13px;color:var(--mu);margin:6px 0}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.tools button,.tools label{padding:8px 10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;font-size:13px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:18px 0 6px}
+.row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin-bottom:6px}
+.row.done{background:var(--okb);border-color:var(--ok)}
+.row.short{background:var(--badb)}
+.nm{flex:1;min-width:0}
+.nm b{display:block;font-weight:600;font-size:15px}
+.nm span{font-size:12px;color:var(--mu)}
+.ct{display:flex;align-items:center;gap:6px}
+.ct button{width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:22px;line-height:1}
+.ct .full{width:auto;padding:0 10px;font-size:13px;color:var(--ac)}
+.ct output{min-width:46px;text-align:center;font-weight:700;font-size:16px}
+.chk{width:28px;height:28px}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;margin:8px 0}
+.panel input,.panel select,.panel textarea{width:100%;padding:9px;margin:4px 0;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.panel button{padding:9px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-weight:600;margin-top:4px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="err" style="display:none;background:#fee2e2;color:#991b1b;padding:8px;border-radius:8px;margin-top:8px;font-size:13px"></div>
+<header>
+<h1>Storekeeper</h1>
+<div class="sub"><span id="ev">Salalah event</span> · Arabic Future Company</div>
+<div class="tabs"><button id="tL" class="on">Loading</button><button id="tU">Unloading</button></div>
+<div class="bar"><i id="pb"></i></div>
+<div class="stat"><span id="s1"></span><span id="s2"></span></div>
+<div class="stat"><span id="lv"></span><span id="s3"></span></div>
+</header>
+<div class="tools">
+<label><input type="checkbox" id="mo"> Missing only</label>
+<button id="bm">Missing list</button>
+<button id="ba">Add item</button>
+<button id="br">Reset</button>
+</div>
+<div id="pm" class="panel hide"><textarea id="mt" rows="8" readonly></textarea><button id="bc">Copy</button></div>
+<div id="pa" class="panel hide">
+<input id="an" placeholder="Item name">
+<select id="ac"></select>
+<input id="aq" type="number" min="1" placeholder="Quantity (empty = all)">
+<button id="ad">Add</button>
+</div>
+<div id="list"></div>
+</div>
+<script>
+window.onerror=function(m,u,l){var d=document.getElementById("err");if(d){d.style.display="block";d.textContent="Error: "+m+" (line "+l+")"}};
+var CATS=["Truss & winch","Power","Lighting & control","Rigging & tools"];
+var DEF=[
+["Truss & winch","Truss 40×40 – 3 m",20],["Truss & winch","Truss 40×40 – 2 m",4],["Truss & winch","Truss 40×40 – 1 m",2],
+["Truss & winch","Wheel base",4],["Truss & winch","Moving corner",4],["Truss & winch","Corner box",4],["Truss & winch","Wheel base supporter",4],
+["Truss & winch","Winch motor",4],["Truss & winch","Winch motor controller",1],["Truss & winch","Winch motor power cable",5],
+["Truss & winch","Truss pin, lock & double coupler",null],["Truss & winch","Truss head",4],
+["Power","Power cable 16A industrial M–F",25],["Power","Power cable industrial to powerCON",15],["Power","64A main power cable",1],
+["Power","Steel main DB 64A",1],["Power","32A small DB",4],["Power","32A power cable industrial M–F",6],
+["Lighting & control","380W beam light + clamp",8],["Lighting & control","Zoom wash + clamp",6],["Lighting & control","COB 4-eye + clamp",10],
+["Lighting & control","LED par can WEN + clamp",9],["Lighting & control","Profile light + clamp",6],["Lighting & control","Blinder light + clamp",12],
+["Lighting & control","DMX splitter",1],["Lighting & control","TP-Link WiFi router",1],
+["Rigging & tools","Safety belt & G clamp",null],["Rigging & tools","Light clamp",10],["Rigging & tools","Double tape",5],
+["Rigging & tools","Drill machine",2],["Rigging & tools","Grinder machine",1]
+];
+var K="afc_storekeeper_salalah",S=null,mode="L";
+function load(){try{var v=localStorage.getItem(K);if(v)S=JSON.parse(v)}catch(e){}
+ if(!S)S={items:DEF.map(function(d,i){return{id:i,c:d[0],n:d[1],q:d[2],l:0,r:0}}),next:DEF.length}}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+var DB=null,LIVE="local";
+function persist(it){it.ts=Date.now();
+ if(DB){DB.doc("salalah/i"+it.id).set({id:it.id,c:it.c,n:it.n,q:it.q,l:it.l,r:it.r,ts:it.ts}).catch(function(e){LIVE="error";status()})}
+ else save()}
+function status(){var t={live:"● Live – shared",local:"Saved on this phone only",error:"Not saving – ask owner to share as Contributor"};
+ $("lv").textContent=t[LIVE];$("lv").style.color=LIVE=="live"?"var(--ok)":LIVE=="error"?"var(--bad)":"var(--mu)"}
+function ago(ts){var m=Math.round((Date.now()-ts)/60000);return m<1?"just now":m<60?m+" min ago":Math.round(m/60)+" h ago"}
+function connect(){
+ if(!window.claude||typeof window.claude.use!=='function')return;
+ claude.use("db").then(function(d){if(!d)return;DB=d;
+  d.collection("salalah").onSnapshot(function(snap){
+   var last=0;
+   snap.docs.forEach(function(x){var v=x.data();if(!v)return;var it=find(v.id);
+    if(it){it.l=v.l;it.r=v.r;it.ts=v.ts;if(v.q!==undefined)it.q=v.q}
+    else S.items.push({id:v.id,c:v.c,n:v.n,q:v.q,l:v.l,r:v.r,ts:v.ts});
+    if(v.ts>last)last=v.ts});
+   LIVE="live";S.last=last;status();render()},
+  function(){LIVE="error";status()})
+ }).catch(function(){})}
+function tgt(it){return mode=="L"?(it.q==null?1:it.q):it.l}
+function cur(it){return mode=="L"?it.l:it.r}
+function lim(it){return it.q==null?1:it.q}
+function miss(it){return Math.max(0,tgt(it)-cur(it))}
+function $(i){return document.getElementById(i)}
+function render(){
+ var mo=$("mo").checked,h="",tot=0,dn=0,mi=0,items=S.items;
+ items.forEach(function(it){var t=tgt(it);if(t>0){tot++;if(miss(it)==0)dn++}mi+=miss(it)>0&&t>0?1:0});
+ CATS.concat(items.map(function(i){return i.c}).filter(function(c,i,a){return CATS.indexOf(c)<0&&a.indexOf(c)==i})).forEach(function(c){
+  var rows="";
+  items.filter(function(i){return i.c==c}).forEach(function(it){
+   var t=tgt(it),m=miss(it);if(mode=="U"&&t==0&&mo)return;if(mo&&m==0)return;
+   var cls=t>0&&m==0?"done":(mode=="U"&&m>0?"short":"");
+   var sub=mode=="L"?(it.q==null?"All":"Need "+it.q):("Loaded "+it.l+(it.q==null?"":" of "+it.q));
+   var ctl=it.q==null
+    ?'<input type="checkbox" class="chk" data-id="'+it.id+'"'+(cur(it)?" checked":"")+(mode=="U"&&!it.l?" disabled":"")+'>'
+    :'<button data-a="-" data-id="'+it.id+'">−</button><output>'+cur(it)+" / "+t+'</output><button data-a="+" data-id="'+it.id+'">+</button><button class="full" data-a="f" data-id="'+it.id+'">Full</button>';
+   rows+='<div class="row '+cls+'"><div class="nm"><b>'+esc(it.n)+'</b><span>'+sub+(m>0&&t>0?" · missing "+m:"")+'</span></div><div class="ct">'+ctl+'</div></div>'});
+  if(rows)h+="<h2>"+esc(c)+"</h2>"+rows});
+ $("list").innerHTML=h||'<div class="sub" style="padding:20px;text-align:center">Nothing missing ✔</div>';
+ $("pb").style.width=(tot?dn/tot*100:0)+"%";
+ $("s1").textContent=dn+" of "+tot+" lines complete";
+ $("s2").textContent=mi?mi+" lines missing":"All complete";if(S.last)$("s3").textContent="Last update "+ago(S.last);
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function find(id){return S.items.filter(function(i){return i.id==id})[0]}
+function setv(it,v){v=Math.max(0,Math.min(mode=="L"?lim(it):it.l,v));if(mode=="L"){it.l=v;if(it.r>v)it.r=v}else it.r=v;persist(it)}
+$("list").addEventListener("click",function(e){
+ var b=e.target.closest("[data-a]");if(!b)return;var it=find(b.dataset.id),a=b.dataset.a;
+ if(a=="+")setv(it,cur(it)+1);else if(a=="-")setv(it,cur(it)-1);else setv(it,mode=="L"?lim(it):it.l);
+ render()});
+$("list").addEventListener("change",function(e){
+ if(!e.target.classList.contains("chk"))return;setv(find(e.target.dataset.id),e.target.checked?1:0);render()});
+function tab(m){mode=m;$("tL").classList.toggle("on",m=="L");$("tU").classList.toggle("on",m=="U");render()}
+$("tL").onclick=function(){tab("L")};$("tU").onclick=function(){tab("U")};
+$("mo").onchange=render;
+$("bm").onclick=function(){
+ var t=(mode=="L"?"MISSING AT LOADING":"NOT RETURNED")+" – "+$("ev").textContent+"\n",any=false;
+ S.items.forEach(function(it){var m=miss(it);if(tgt(it)>0&&m>0){any=true;t+="- "+it.n+": "+(it.q==null?"not checked":m+" of "+tgt(it))+"\n"}});
+ if(!any)t+="Nothing missing.";$("mt").value=t;$("pm").classList.toggle("hide")};
+$("bc").onclick=function(){$("mt").select();try{document.execCommand("copy")}catch(e){}};
+$("ba").onclick=function(){$("pa").classList.toggle("hide")};
+$("ad").onclick=function(){var n=$("an").value.trim();if(!n)return;var q=parseInt($("aq").value,10);
+ var ni={id:"x"+Date.now(),c:$("ac").value,n:n,q:q>0?q:null,l:0,r:0};S.items.push(ni);persist(ni);$("an").value="";$("aq").value="";render()};
+$("br").onclick=function(){if(confirm("Reset all loading and unloading counts?")){S.items.forEach(function(i){i.l=0;i.r=0;persist(i)});render()}};
+$("ac").innerHTML=CATS.map(function(c){return"<option>"+c+"</option>"}).join("");
+load();render();status();try{connect()}catch(e){}setInterval(function(){if(S.last)$("s3").textContent="Last update "+ago(S.last)},30000);
+</script>
+</body>
+</html>
